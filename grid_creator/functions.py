@@ -136,7 +136,7 @@ class GeoTIFFApp:
                     region=region,
                     spacing=f"{x_inc}/{y_inc}",
                     outgrid=output_path,
-                    verbose='w',
+                    verbose=True,
                 )
             case 'Triangulate':
                 pygmt.triangulate.regular_grid(
@@ -144,7 +144,7 @@ class GeoTIFFApp:
                     region=region,
                     spacing=f"{x_inc}/{y_inc}",
                     outgrid=output_path,
-                    verbose='w',
+                    verbose=True,
                 )
 
     def convert_netcdf_to_geotiff(self, netcdf_path, geotiff_path):
