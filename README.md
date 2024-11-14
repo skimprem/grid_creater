@@ -11,12 +11,23 @@ applications.
 
 ## Installation
 
-To install Grid Creator, clone the repository and install the dependencies:
+To install Grid Creator, clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/grid_creator.git
+git clone https://github.com/skimprem/grid_creator.git
 cd grid_creator
-npm install
+```
+
+create virtual environment:
+```bash
+python -m venv .env
+source .env/bin/activate
+```
+
+and install the dependencies
+
+```
+pip install .
 ```
 
 ## Usage
@@ -24,14 +35,8 @@ npm install
 To start using Grid Creator, run the following command:
 
 ```bash
-npm start
+grid_creator
 ```
-
-Open your browser and navigate to `http://localhost:3000` to access the
-application.
-
-
-We welcome contributions! Please fork the repository and submit a pull request.
 
 ## License
 
@@ -40,7 +45,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file
 ## Contact
 
 For any questions or feedback, please contact
-[yourname@example.com](mailto:yourname@example.com).
+[roman.sermiagin@gmail.com](mailto:roman.sermiagin@gmail.com).
 for details.
 
 ## Contributing

@@ -14,7 +14,7 @@ class GeoTIFFApp:
         self.root.title("GeoTIFF Generator")
 
         self.points_file = tk.StringVar()
-        self.coastline_file = tk.StringVar()
+        # self.coastline_file = tk.StringVar()
         self.grid_step = tk.DoubleVar(value=1.0)
         self.gridding_method = tk.StringVar(value="Minimal Curvature")
         self.elevation = tk.StringVar()
@@ -22,7 +22,7 @@ class GeoTIFFApp:
         self.create_widgets()
 
     def create_widgets(self):
-        self.create_label("Select Points Shapefile:")
+        self.create_label("Select Points GeoPackage File:")
         self.create_entry_button(self.points_file, "Browse", self.select_points_file)
 
         self.create_label("Select Elevation:")
@@ -32,8 +32,8 @@ class GeoTIFFApp:
         self.column_menu = ttk.Combobox(frame, state="readonly", textvariable=self.elevation)
         self.column_menu.pack(side=tk.LEFT)
 
-        self.create_label("Select Coastline Shapefile (Optional):")
-        self.create_entry_button(self.coastline_file, "Browse", self.select_coastline_file)
+        # self.create_label("Select Coastline GeoPackage (Optional):")
+        # self.create_entry_button(self.coastline_file, "Browse", self.select_coastline_file)
 
         self.create_label("Grid Step (in arcsec):")
         tk.Entry(self.root, textvariable=self.grid_step).pack(padx=10, pady=5)
@@ -71,10 +71,10 @@ class GeoTIFFApp:
             self.points_file.set(file_path)
             self.update_column_menu(file_path)
 
-    def select_coastline_file(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Shapefiles", "*.gpkg")])
-        if file_path:
-            self.coastline_file.set(file_path)
+    # def select_coastline_file(self):
+    #     file_path = filedialog.askopenfilename(filetypes=[("Shapefiles", "*.gpkg")])
+    #     if file_path:
+    #         self.coastline_file.set(file_path)
 
     def generate_geotiff(self):
         if not self.points_file.get():
@@ -82,17 +82,11 @@ class GeoTIFFApp:
             return
 
         points = gpd.read_file(self.points_file.get())
-        coastlines = gpd.read_file(self.coastline_file.get()) if self.coastline_file.get() else None
+        # coastlines = gpd.read_file(self.coastline_file.get()) if self.coastline_file.get() else None
         x_inc = self.grid_step.get() / 3600.0
         y_inc = self.grid_step.get() / 3600.0
 
-        match self.gridding_method.get():
-            case 'Minimal Curvature':
-                self.gridding_method.set('surface')
-            case 'Triangulate':
-                self.gridding_method.set('triangulate')
-        
-        netcdf_path = f'{path.basename(self.points_file.get())[0]}_{self.grid_step.get()}s.nc'
+        netcdf_path = f'{path.splitext(self.points_file.get())[0]}_{self.gridding_method.get().lower().replace(' ', '_')}_{self.grid_step.get()}s.nc'
 
         self.grid_by_gmt(
             gdf=points,
@@ -102,12 +96,16 @@ class GeoTIFFApp:
             method=self.gridding_method.get()
         )
 
-        geotiff_path = filedialog.asksaveasfilename(defaultextension=".tif", filetypes=[("GeoTIFF", "*.tif")])
+        geotiff_path = filedialog.asksaveasfilename(
+            defaultextension=".tif",
+            initialfile=f'{path.splitext(netcdf_path)[0]}.tif',
+            filetypes=[("GeoTIFF", "*.tif")]
+        )
         self.convert_netcdf_to_geotiff(netcdf_path, geotiff_path)
 
         messagebox.showinfo("Success", f"GeoTIFF saved to {geotiff_path}")
 
-    def grid_by_gmt(self, gdf, x_inc, y_inc, output_path, method='surface', region=None):
+    def grid_by_gmt(self, gdf, x_inc, y_inc, output_path, method='Minimal Curvature', region=None):
 
         data = pd.DataFrame(
             {
@@ -125,7 +123,7 @@ class GeoTIFFApp:
             )
 
         match method:
-            case 'surface':
+            case 'Minimal Curvature':
                 blocks = pygmt.blockmedian(
                     data=data,
                     spacing=f"{x_inc}/{y_inc}",
@@ -140,7 +138,7 @@ class GeoTIFFApp:
                     outgrid=output_path,
                     verbose='w',
                 )
-            case 'triangulate':
+            case 'Triangulate':
                 pygmt.triangulate.regular_grid(
                     data=data,
                     region=region,
@@ -150,7 +148,8 @@ class GeoTIFFApp:
                 )
 
     def convert_netcdf_to_geotiff(self, netcdf_path, geotiff_path):
-        grid = xr.open_dataarray(netcdf_path, engine="scipy")
+
+        grid = xr.open_dataarray(netcdf_path, engine = 'netcdf4')
 
         left, right = grid.x.min().item(), grid.x.max().item()
         bottom, top = grid.y.min().item(), grid.y.max().item()
@@ -175,7 +174,4 @@ class GeoTIFFApp:
     def close_app(self):
         self.root.quit()
 
-# Запуск приложения
-root = tk.Tk()
-app = GeoTIFFApp(root)
-root.mainloop()
+
