@@ -6,8 +6,7 @@ applications.
 
 - Easy to use interface
 - Customizable grid size
-- Export grid as image or JSON
-- Lightweight and fast
+- Export grid as GeoTIFF
 
 ## Installation
 
